@@ -11,14 +11,14 @@ architecture Behavioral of tb_main is
 
 component main 
 Port (
-    password_in:            in std_logic_vector(11 downto 0);
+    password_in:            in std_logic_vector (11 downto 0);
     passwordSetupButton:    in std_logic;
     armModeButton:          in std_logic;
     doorOpenButton:         in std_logic;
     passwordEntryButton:    in std_logic;
     clk:                    in std_logic;
     resetButtonDOM:         in std_logic;
-    password_out:           out std_logic_vector(11 downto 0);
+    password_out:           out std_logic_vector (11 downto 0);
     statusLED:              out std_logic;
     secondStatusLED:        out std_logic;
     attempOneLED:           out std_logic;
@@ -27,16 +27,16 @@ Port (
     alarm:                  out std_logic        
 );
 end component;
-signal passwordSetupButton,armModeButton,doorOpenButton,passwordEntryButton,resetButtonDOM: std_logic:='0';
+signal passwordSetupButton,armModeButton,doorOpenButton,passwordEntryButton,resetButtonDOM: std_logic:= '0';
 signal clk: std_logic;
 signal statusLED,secondStatusLED,attempOneLED,attempTwoLED,attempThreeLED,alarm: std_logic;
-signal password_in:std_logic_vector(11 downto 0):= "000000000000";
-signal password_out:std_logic_vector(11 downto 0);
+signal password_in:std_logic_vector (11 downto 0):= "000000000000";
+signal password_out:std_logic_vector (11 downto 0);
 
 -----------------------------------------------------------------------
 constant clk_period: time:= 10ns;
-file file_input  : text;
-file file_output : text;
+file file_input    : text;
+file file_output   : text;
 
 begin
 DUT: main port map(password_in,passwordSetupButton,armModeButton,doorOpenButton
@@ -44,9 +44,9 @@ DUT: main port map(password_in,passwordSetupButton,armModeButton,doorOpenButton
                    ,secondStatusLED,attempOneLED, attempTwoLED, attempThreeLED, alarm);
 clk_process:process
 begin
-    clk<='1';
+    clk <= '1';
     wait for clk_period/2;
-    clk<='0';
+    clk <= '0';
     wait for clk_period/2;
 end process;
 
@@ -55,11 +55,11 @@ variable l_in:line;
 variable l_out:line;
 variable l_space:character;
 variable vpasswordSetupButton,varmModeButton,vdoorOpenButton:std_logic;
-variable vpasswordEntryButton,vresetButtonDOM :std_logic;
-variable vpassword_in:std_logic_vector(11 downto 0); 
+variable vpasswordEntryButton,vresetButtonDOM:std_logic;
+variable vpassword_in:std_logic_vector (11 downto 0); 
 begin
-file_open(file_input, "C:\Users\mailf\Documents\simulation.txt",  read_mode);
-file_open(file_output,"C:\Users\mailf\Documents\result.txt", write_mode);
+file_open(file_input, "C:\Users\mailf\Documents\simulation.txt", read_mode);
+file_open(file_output, "C:\Users\mailf\Documents\result.txt", write_mode);
 While not endfile(file_input) loop
     readline(file_input, l_in);
     read(l_in, vpassword_in);
