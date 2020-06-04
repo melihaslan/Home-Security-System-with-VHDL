@@ -1,0 +1,154 @@
+library IEEE;
+
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_arith.ALL;
+use IEEE.STD_LOGIC_unsigned.ALL;
+
+entity main is
+Port (
+    password_in:                in std_logic_vector (11 downto 0);
+    passwordSetupButton:        in std_logic;
+    armModeButton:              in std_logic;
+    doorOpenButton:             in std_logic;
+    passwordEntryButton:        in std_logic;
+    clk:                        in std_logic;
+    resetButtonDOM:             in std_logic;
+    password_out:               out std_logic_vector (11 downto 0);
+    statusLED:                  out std_logic;
+    secondStatusLED:            out std_logic;
+    attempOneLED:               out std_logic;
+    attempTwoLED:               out std_logic;
+    attempThreeLED:             out std_logic;
+    alarm:                      out std_logic        
+);
+end main;
+
+architecture Behavioral of main is
+
+    signal Blinking:            std_logic:= '1';
+    signal State:               std_logic_vector (1 downto 0):= "00";
+    signal WroPasNum:           std_logic_vector (11 downto 0):= "000000000000"; 
+    signal ClkOfDOM:            std_logic_vector (11 downto 0):= "000000000000";
+    signal Password:            std_logic_vector (11 downto 0):= "000000000000";
+    
+    constant IDLE:              std_logic_vector (1 downto 0):= "00" ;
+    constant PASSWORD_SETUP:    std_logic_vector (1 downto 0):= "01" ;
+    constant ARM: 	            std_logic_vector (1 downto 0):= "10" ;
+    constant DOOR_OPEN: 	    std_logic_vector (1 downto 0):= "11" ;
+
+begin
+process (clk, resetButtonDOM, password_in, passwordSetupButton, armModeButton, doorOpenButton, passwordEntryButton)
+begin
+
+if (falling_edge(clk)) then
+    
+    Blinking <= not Blinking;
+    
+    case State is
+    
+        when IDLE =>
+        
+        statusLED <= Blinking;
+        secondStatusLED <= '0';
+        attempOneLED <= '0';
+        attempTwoLED <= '0';
+        attempThreeLED <= '0';
+        alarm <= '0';
+        WroPasNum <= "000000000000";
+        ClkOfDOM <= "000000000000";
+        
+        if (passwordSetupButton='1') then
+            State <= PASSWORD_SETUP;
+        elsif (armModeButton='1') then
+            State <= ARM;
+            
+        else
+            State <= IDLE;
+        end if;
+        
+        when PASSWORD_SETUP =>
+
+        statusLED <= '0';
+        
+        if (passwordSetupButton='1') then
+            if (password_in(3 downto 0) <= "1001" and password_in(7 downto 4) <= "1001" and password_in(11 downto 8) <= "1001") then
+                State <= IDLE;
+                Password <= password_in;
+                password_out <= password_in;
+            end if;
+        else
+            State <= PASSWORD_SETUP;
+        end if;
+       
+        when ARM =>
+        
+        statusLED <= '1';
+        
+        if (doorOpenButton='1') then
+            State <= DOOR_OPEN;
+        else
+            State <= ARM;
+        end if;
+        
+        when DOOR_OPEN =>
+         
+        ClkOfDOM <= ClkOfDOM + 1;
+ 
+        if (resetButtonDOM = '1') then
+            State <= IDLE;
+            statusLED <= '0';
+            secondStatusLED <= '0'; 
+            attempOneLED <= '0';
+            attempTwoLED <= '0';
+            attempThreeLED <= '0';
+            alarm <= '0';
+        else
+            statusLED <= '0';
+            secondStatusLED <= '1';
+            if (ClkOfDOM >= "000000011110") then
+                State <= DOOR_OPEN;
+                attempOneLED <= Blinking;
+                attempTwoLED <= Blinking;
+                attempThreeLED <= Blinking;
+                alarm <= '1';
+            else
+                if (passwordEntryButton = '1') then
+                    if(password_in = Password) then
+                        State <= IDLE;
+                    else
+                        if (WroPasNum < "000000000011") then
+                            WroPasNum <= WroPasNum + 1;
+                        else
+                            WroPasNum <= WroPasNum;
+                        end if;
+                        State <= DOOR_OPEN;
+                    end if;
+                end if;
+                    if (WroPasNum = "000000000001") then
+                    attempOneLED <= '1';
+                    attempTwoLED <= '0';
+                elsif (WroPasNum = "000000000010") then
+                    attempOneLED <= '1';
+                    attempTwoLED <= '1';
+                elsif (WroPasNum = "000000000011") then
+                    attempOneLED <= Blinking;
+                    attempTwoLED <= Blinking;
+                    attempThreeLED <= Blinking;
+                    alarm <= '1';
+                else
+                    attempOneLED <= '0';
+                    attempTwoLED <= '0';
+                end if;
+            end if;
+
+        end if;
+                    
+        when others =>
+        
+            State <= IDLE;
+            
+    end case;                
+end if;
+    
+end process;
+end Behavioral;
